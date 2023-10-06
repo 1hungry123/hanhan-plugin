@@ -2,7 +2,6 @@ import plugin from '../../../lib/plugins/plugin.js'
 
 export class RussiaRoundPlatePlugin extends plugin {
   constructor () {
-    this.nop = 0;
     super({
       name: '憨憨小游戏-俄罗斯轮盘',
       dsc: '憨憨小游戏-俄罗斯轮盘',
