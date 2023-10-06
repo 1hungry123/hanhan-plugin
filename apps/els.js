@@ -28,6 +28,7 @@ export class RussiaRoundPlatePlugin extends plugin {
   }
 
   async start (e) {
+    this.nop = 0
     if (!e.isGroup) {
       await e.reply('当前不在群聊里')
       return false
@@ -67,6 +68,7 @@ export class RussiaRoundPlatePlugin extends plugin {
       await e.reply('俄罗斯轮盘出现错误，请发送#结束游戏 后，重新开始游戏')
       return
     }
+    this.nop++
     if (leftBullets <= 1 || Math.random() < 1 / leftBullets) {
       await redis.del(`HANHAN:ELS:${groupId}`)
       let group = await Bot.pickGroup(groupId)
@@ -74,12 +76,18 @@ export class RussiaRoundPlatePlugin extends plugin {
       let min = 1
       let time = Math.floor(Math.random() * (max - min + 1)) + min
       await group.muteMember(e.sender.user_id, time)
-      await e.reply(`【${username}】开了一枪，枪响了。\n恭喜【${username}】中奖，请用语音发送上一个人指定的骚话，也可以发送【0.5*${time}】元拼手气红包跳过语音惩罚，土豪快来\n本轮游戏结束。请使用#开盘 开启新一轮游戏`)
+      await e.reply(`【${username}】开了一枪，枪响了。\n恭喜【${username}】中奖，请用语音发送上一个人指定的骚话，或发送【0.5*${this.nop}】元拼手气红包跳过语音惩罚，土豪快来\n本轮游戏结束。请使用#开盘 开启新一轮游戏`)
       // await redis.del(`HANHAN:ELS:${groupId}`)
     } else {
       leftBullets--
       await redis.set(`HANHAN:ELS:${groupId}`, leftBullets + '', { EX: 10 * 60 * 1000 })
-      await e.reply(`【${username}】开了一枪，没响。\n还剩【${leftBullets}】发子弹`)
+      if (leftBullets == 1) {
+        await redis.del(`HANHAN:ELS:${groupId}`)
+        await e.reply(`【${username}】开了一枪，只剩1发子弹了\n恭喜${username}是冠军！\n你可以指定一个人用语音发送上一个人指定的骚话，或让他发送【0.5*${this.nop}】元拼手气红包跳过语音惩罚，土豪快来\n本轮游戏结束。请使用#开盘 开启新一轮游戏`)
+      }
+      else {
+        await e.reply(`【${username}】开了一枪，没响。\n还剩【${leftBullets}】发子弹`)
+      }
       // e.reply(`${leftBullets}`)
     }
   }
