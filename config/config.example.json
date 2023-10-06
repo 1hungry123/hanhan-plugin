@@ -1,0 +1,14 @@
+{
+  "pingToken": "",
+  "proxyUrl": "http://127.0.0.1:7890",
+  "chromeF": "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+  "noie": true,
+  "tmdbkey": "",
+  "sysecho":"搜索中...",
+  "sysecho0":"30000ms erorr",
+  "sysgqjt": 1,
+  "gdkey":"",
+  "studyGroups": [
+    "123456"
+  ]
+}
