@@ -71,6 +71,7 @@ export class RussiaRoundPlatePlugin extends plugin {
     console.log("人数增加前：" + this.nop)
     this.nop = parseInt(this.nop) + 1;
     console.log("人数增加后：" + this.nop)
+    await e.reply(`当前：${this.nop}`)
     if (leftBullets <= 1 || Math.random() < 1 / leftBullets) {
       await redis.del(`HANHAN:ELS:${groupId}`)
       let group = await Bot.pickGroup(groupId)
