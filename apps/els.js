@@ -16,6 +16,13 @@ export class RussiaRoundPlatePlugin extends plugin {
           reg: '^#?开枪$',
           fnc: 'shoot'
         },
+        {
+          reg: '^#?结束游戏$',
+          fnc: 'stopShoop'
+        }, {
+          reg: '^#?当前子弹$',
+          fnc: 'nowBullet'
+        }
       ]
     })
   }
@@ -25,6 +32,7 @@ export class RussiaRoundPlatePlugin extends plugin {
       await e.reply('当前不在群聊里')
       return false
     }
+
     let groupId = e.group_id
     let groupLock = await redis.get(`HANHAN:ELS:${groupId}`)
     if (!groupLock) {
@@ -38,28 +46,71 @@ export class RussiaRoundPlatePlugin extends plugin {
 
   async shoot (e) {
     if (!e.isGroup) {
+      await e.reply('当前不在群聊里')
       return false
     }
     let groupId = e.group_id
-    let leftBullets = await redis.get(`HANHAN:ELS:${groupId}`)
-    if (!leftBullets) {
-      await this.start(e)
-      leftBullets = await redis.get(`HANHAN:ELS:${groupId}`)
+    let groupLock = await redis.get(`HANHAN:ELS:${groupId}`)
+    if (!groupLock) {
+      await e.reply('当前群没有开盘，无法开枪')
+      return
     }
+    // let leftBullets = await redis.get(`HANHAN:ELS:${groupId}`)
+    // if (!leftBullets) {
+    //   await this.start(e)
+    //   leftBullets = await redis.get(`HANHAN:ELS:${groupId}`)
+    // }
     let username = e.sender.card || e.sender.nickname
-    leftBullets = parseInt(leftBullets)
+    // leftBullets = parseInt(leftBullets)
+    let leftBullets = parseInt(groupLock)
+    if (isNaN(leftBullets)) {
+      await e.reply('俄罗斯轮盘出现错误，请发送#结束游戏 后，重新开始游戏')
+      return
+    }
     if (leftBullets <= 1 || Math.random() < 1 / leftBullets) {
+      await redis.del(`HANHAN:ELS:${groupId}`)
       let group = await Bot.pickGroup(groupId)
-      let max = 300
-      let min = 60
+      let max = 5
+      let min = 1
       let time = Math.floor(Math.random() * (max - min + 1)) + min
       await group.muteMember(e.sender.user_id, time)
-      await e.reply(`【${username}】开了一枪，枪响了。\n恭喜【${username}】被禁言${time}秒\n本轮游戏结束。请使用#开盘 开启新一轮游戏`)
-      await redis.del(`HANHAN:ELS:${groupId}`)
+      await e.reply(`【${username}】开了一枪，枪响了。\n恭喜【${username}】中奖，请用语音发送上一个人指定的骚话，也可以发送【0.5*${time}】元拼手气红包跳过语音惩罚，土豪快来\n本轮游戏结束。请使用#开盘 开启新一轮游戏`)
+      // await redis.del(`HANHAN:ELS:${groupId}`)
     } else {
       leftBullets--
       await redis.set(`HANHAN:ELS:${groupId}`, leftBullets + '', { EX: 10 * 60 * 1000 })
       await e.reply(`【${username}】开了一枪，没响。\n还剩【${leftBullets}】发子弹`)
+      // e.reply(`${leftBullets}`)
+    }
+  }
+
+  async stopShoop (e) {
+    if (!e.isGroup) {
+      await e.reply('当前不在群聊里')
+      return false
+    }
+    let groupId = e.group_id
+    let groupLock = await redis.get(`HANHAN:ELS:${groupId}`)
+    // e.reply(groupLock)
+    if (!groupLock) {
+      e.reply('当前群没有开盘')
+    } else {
+      await redis.del(`HANHAN:ELS:${groupId}`)
+      e.reply('结束成功')
+    }
+  }
+
+  async nowBullet (e) {
+    if (!e.isGroup) {
+      await e.reply('当前不在群聊里')
+      return false
+    }
+    let groupId = e.group_id
+    let groupLock = await redis.get(`HANHAN:ELS:${groupId}`)
+    if (!groupLock) {
+      e.reply('当前群没有开盘')
+    } else {
+      e.reply('当前还有' + groupLock + '发子弹')
     }
   }
 }
