@@ -29,7 +29,6 @@ export class RussiaRoundPlatePlugin extends plugin {
   }
 
   async start (e) {
-    this.nop = 0
     if (!e.isGroup) {
       await e.reply('当前不在群聊里')
       return false
@@ -41,6 +40,7 @@ export class RussiaRoundPlatePlugin extends plugin {
       let bulletNum = Math.floor(Math.random() * 5) + 5
       await redis.set(`HANHAN:ELS:${groupId}`, bulletNum + '', { EX: 10 * 60 * 1000 })
       await e.reply(`当前群俄罗斯轮盘已开启！\n弹夹有【${bulletNum}】发子弹。\n请发送#开枪 参与游戏`)
+      this.nop = 0
     } else {
       await e.reply('当前群俄罗斯轮盘正在进行中！\n请发送#开枪 参与游戏')
     }
