@@ -10,7 +10,8 @@ const defaultConfig = {
   sysecho0: '30000ms erorr',
   sysgqjt: 1,
   gdkey: '',
-  studyGroups: ''
+  studyGroups: '',
+  version: '1.2.8'
 }
 const _path = process.cwd()
 let config = {}

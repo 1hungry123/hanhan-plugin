@@ -1,94 +1,71 @@
-import plugin from '../../../lib/plugins/plugin.js'
-import { segment } from 'oicq'
-import axios from 'axios'
-import { Config } from '../utils/config.js'
 import { endingSpeech, followMe, pepTalk } from '../utils/const.js'
-import { sleep } from '../utils/common.js'
+import { sleep, recallSendForwardMsg } from '../utils/common.js'
+import plugin from '../../../lib/plugins/plugin.js'
+import { Config } from '../utils/config.js'
+import fetch from 'node-fetch'
+import { segment } from 'icqq'
+import axios from 'axios'
 
 export class photo extends plugin {
-  constructor() {
+  constructor () {
     super({
-      /** 功能名称 */
       name: '憨憨图片类',
-      /** 功能描述 */
       dsc: '憨憨图片类',
-      /** https://oicqjs.github.io/oicq/#events */
       event: 'message',
-      /** 优先级，数字越小等级越高 */
       priority: 6,
       rule: [
         {
-          /** 命令正则匹配 */
-          reg: '^#?天气',
-          /** 执行方法 */
-          fnc: 'tianqi'
-        },
-        {
-          /** 命令正则匹配 */
           reg: '^#?mc酱$',
-          /** 执行方法 */
           fnc: 'mc'
         },
         {
-          /** 命令正则匹配 */
           reg: '^#?小c酱$',
-          /** 执行方法 */
           fnc: 'xiaoc'
         },
         {
-          /** 命令正则匹配 */
           reg: '^#?兽猫酱$',
-          /** 执行方法 */
           fnc: 'shoumao'
         },
         {
-          /** 命令正则匹配 */
           reg: '^#?买家秀$',
-          /** 执行方法 */
           fnc: 'buyerShow'
         },
         {
-          /** 命令正则匹配 */
           reg: '^#?mt$',
-          /** 执行方法 */
           fnc: 'mt'
         },
         {
-          /** 命令正则匹配 */
           reg: '^#?随机(ai|AI)$',
-          /** 执行方法 */
           fnc: 'sjai'
         },
         {
-          /** 命令正则匹配 */
-          reg: '^#?手写$',
-          /** 执行方法 */
-          fnc: 'sx'
-        },
-        {
-          /** 命令正则匹配 */
           reg: '^#?每日英语$',
-          /** 执行方法 */
           fnc: 'mryy'
         },
         {
-          /** 命令正则匹配 */
           reg: '^#?随机柴郡$',
-          /** 执行方法 */
           fnc: 'cj'
         },
         {
-          /** 命令正则匹配 */
           reg: '^#?随机acg$',
-          /** 执行方法 */
           fnc: 'random_acg'
         },
         {
-          /** 命令正则匹配 */
           reg: '^#?随机东方$',
-          /** 执行方法 */
           fnc: 'random_orient'
         },
+        {
+          reg: '^#?一二布布$',
+          fnc: 'yebb'
+        },
+        {
+          reg: '^#?情侣头像$',
+          fnc: 'qltx'
+        },
+        {
+          reg: '^#?随机(.*)吧',
+          fnc: 'bdtb'
+        }
       ]
     })
     this.task = [
@@ -101,7 +78,7 @@ export class photo extends plugin {
     ]
   }
 
-  async englishTimeIsUp() {
+  async englishTimeIsUp () {
     let toSend = Config.studyGroups || []
     let url = 'https://open.iciba.com/dsapi/'
     let response = await axios.get(url) // 调用接口获取数据
@@ -135,107 +112,163 @@ export class photo extends plugin {
     }
   }
 
-  // 随机柴郡
-  async cj(e) {
+  // 百度贴吧
+  async bdtb (e) {
+    let forwardMsgs = []
+    let encode = e.msg.replace(/^#?随机/, '').trim()
+    let prefix = encode.split('吧')[0] // 使用split()方法以"吧"为分隔符分割字符串，然后获取第一个元素（吧字前面的内容）
+    console.log(prefix) // 输出提取的内容
+    let url = `http://api.yujn.cn/api/tieba.php?type=json&msg=${prefix}`
+    let res = await axios.get(url) // 调用接口获取数据
+    let result = await res.data
+    // console.log(result.code)
+    if (result.code == 201) {
+      return e.reply(result.tips)
+    }
+    console.log(result)
+    if (res.status == 200) {
+      forwardMsgs.push('昵称：' + result.name)
+      forwardMsgs.push(result.time)
+      forwardMsgs.push(result.title)
+      if (result.text) {
+        forwardMsgs.push(result.text)
+      }
+      if (result.images && result.images.length > 0) {
+        for (let i = 0; i < result.images.length; i++) {
+          forwardMsgs.push(result.images[i])
+          forwardMsgs.push(segment.image(result.images[i]))
+          console.log(i)
+        }
+        forwardMsgs.push('如果图片裂开了，请复制链接到浏览器打开')
+      }
+      let dec = encode
+      return this.reply(await recallSendForwardMsg(e, forwardMsgs, false, dec))
+    } else {
+      e.reply('查询失败,可能接口失效力~，请联系憨憨捏~')
+    }
+  }
+
+  // 情侣头像
+  async qltx (e) {
+    let url = 'http://api.yujn.cn/api/qltx.php?type=json&lx=qltx'
+    let response = await fetch(url) // 调用接口获取数据
+    let result = await response.json()
+    console.log(result)
+    let forwardMsgs = []
+    forwardMsgs.push(result.title)
+    forwardMsgs.push(result.detail)
+    forwardMsgs.push('如果图片裂开了，请复制链接到浏览器打开')
+    if (result.image_count == 0) {
+      forwardMsgs.push('没有图片')
+    } else {
+      for (let i = 0; i < result.image_count; i++) {
+        forwardMsgs.push(result.img[i])
+        forwardMsgs.push(segment.image(result.img[i]))
+        console.log(i)
+      }
+    }
+
+    let dec = '情侣头像'
+    return this.reply(await recallSendForwardMsg(e, forwardMsgs, false, dec))
+  }
+
+  // 一二布布
+  async yebb (e) {
     // 发送消息
-    await this.reply(segment.image('http://api.yujn.cn/api/chaijun.php?'))
+    await this.reply(segment.image('http://api.yujn.cn/api/bubu.php?'))
+    return true // 返回true 阻挡消息不再往下
+  }
+
+  // 随机柴郡
+  async cj (e) {
+    let urls = ['http://api.yujn.cn/api/chaijun.php?', 'http://chaijun.avocado.wiki']
+    const randomIndex = Math.random()
+    let url
+    console.log('randomIndex: ' + randomIndex)
+    if (randomIndex < 0.7) {
+      url = urls[1] // 返回第一个 URL，概率为 0.7
+    } else {
+      url = urls[0] // 返回第二个 URL，概率为 0.3
+    }
+    // 发送消息
+    await this.reply(segment.image(url))
     return true // 返回true 阻挡消息不再往下
   }
 
   // 每日英语
-  async mryy(e) {
+  async mryy (e) {
     let sendmsg = []
     let url = 'https://open.iciba.com/dsapi/'
     let response = await axios.get(url) // 调用接口获取数据
-    console.log(response)
     sendmsg.push(segment.image(response.data.fenxiang_img))
-    await this.reply(sendmsg, true)
-  }
-
-  // 手写模拟器
-  async sx(e) {
-    let encode = e.msg.replace(/^#?手写/, '').trim()
-    // 发送消息
-    await this.reply(segment.image(`https://zj.v.api.aa1.cn/api/zuoye/?msg=${encode}`), true)
-    return true // 返回true 阻挡消息不再往下
-  }
-
-  // 猫羽雫图片天气
-  async tianqi(e) {
-    let encode = e.msg.replace(/^#?天气/, '').trim()
-    // 发送消息
-    await this.reply(segment.image(`http://api.caonm.net/api/qqtq/t.php?msg=${encode}&type=img&n=1`), true)
-    return true // 返回true 阻挡消息不再往下
+    await this.reply(sendmsg)
   }
 
   // mc酱
-  async mc(e) {
+  async mc (e) {
     // 发送消息
     await this.reply(segment.image('https://www.hlapi.cn/api/mcj'))
     return true // 返回true 阻挡消息不再往下
   }
 
   // 小c酱
-  async xiaoc(e) {
+  async xiaoc (e) {
     // 发送消息
     await this.reply(segment.image('http://api.yujn.cn/api/xcj.php?'))
     return true // 返回true 阻挡消息不再往下
   }
 
   // 兽猫酱
-  async shoumao(e) {
+  async shoumao (e) {
     // 发送消息
     await this.reply(segment.image('http://api.yujn.cn/api/smj.php?'))
     return true // 返回true 阻挡消息不再往下
   }
 
   // 美腿
-  async mt(e) {
+  async mt (e) {
     await this.reply(segment.image('http://lx.linxi.icu/API/meitui.php'))
     return true // 返回true 阻挡消息不再往下
   }
 
   // 随机ai
-  async sjai(e) {
+  async sjai (e) {
     // 发送消息
     await this.reply(segment.image('http://lx.linxi.icu/API/aitu.php'))
     return true // 返回true 阻挡消息不再往下
   }
 
   // 买家秀
-  async buyerShow(e) {
+  async buyerShow (e) {
     // 发送消息
     await this.reply(segment.image('https://api.dzzui.com/api/imgtaobao'))
     return true // 返回true 阻挡消息不再往下
   }
+
   // 随机二次元
-  async random_acg(e) {
-    let api_list = [
-    'https://www.dmoe.cc/random.php', 
-    'http://www.98qy.com/sjbz/api.php',
-    'https://t.mwm.moe/mp/',
-    'https://t.mwm.moe/pc/',
-    'https://api.ghser.com/random/pc.php',
-    'https://api.ghser.com/random/pe.php',
-    'https://www.loliapi.com/acg/',
-    'https://api.paugram.com/wallpaper/',
-  ];
-    let random_type = Math.random()
-    if (random_type < 1 ) {
-      let api_number = Math.ceil(Math.random() * api_list['length'])
-      await this.reply(segment.image(`${api_list[api_number - 1]}`))
+  async random_acg (e) {
+    let apiList = [
+      'https://www.dmoe.cc/random.php',
+      'http://www.98qy.com/sjbz/api.php',
+      'https://t.mwm.moe/mp/',
+      'https://t.mwm.moe/pc/',
+      'https://api.ghser.com/random/pc.php',
+      'https://api.ghser.com/random/pe.php',
+      'https://www.loliapi.com/acg/',
+      'https://api.paugram.com/wallpaper/'
+    ]
+    let randomType = Math.random()
+    if (randomType < 1) {
+      let apiNumber = Math.ceil(Math.random() * apiList.length)
+      await this.reply(segment.image(`${apiList[apiNumber - 1]}`))
       return true
     }
   }
 
-  //随机东方
-  async random_orient(e) {
+  // 随机东方
+  async random_orient (e) {
     // 发送消息
     await this.reply(segment.image('https://img.paulzzh.tech/touhou/random'))
-    return true 
+    return true
   }
-
-
-
 }
-
