@@ -68,7 +68,9 @@ export class RussiaRoundPlatePlugin extends plugin {
       await e.reply('俄罗斯轮盘出现错误，请发送#结束游戏 后，重新开始游戏')
       return
     }
+    console.log(this.nop)
     this.nop++
+    console.log(this.nop)
     if (leftBullets <= 1 || Math.random() < 1 / leftBullets) {
       await redis.del(`HANHAN:ELS:${groupId}`)
       let group = await Bot.pickGroup(groupId)
