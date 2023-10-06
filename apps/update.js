@@ -1,7 +1,9 @@
 import plugin from '../../../lib/plugins/plugin.js'
+import { getforwardMsg } from '../utils/common.js'
+import { Restart } from '../../other/restart.js'
 import { createRequire } from 'module'
 import _ from 'lodash'
-import { Restart } from '../../other/restart.js'
+
 process.cwd()
 const require = createRequire(import.meta.url)
 const { exec, execSync } = require('child_process')
@@ -34,7 +36,7 @@ export class Update extends plugin {
     if (!this.e.isMaster) {
       e.reply('憨憨还是认主人的捏~')
       return false
-    } 
+    }
 
     /** 检查是否正在更新中 */
     if (uping) {
@@ -139,9 +141,12 @@ export class Update extends plugin {
     let end = ''
     end =
       '更多详细信息，请前往Github查看\nhttps://github.com/hanhan258/hanhan-plugin'
-
-    log = await this.makeForwardMsg(`hanhan-plugin更新日志，共${line}条`, log, end)
-
+    let forwardMsg = [
+        `hanhan-plugin更新日志，共${line}条`, log, end
+    ]
+    log = await getforwardMsg(this.e, forwardMsg, {
+      shouldSendMsg: false
+    })
     return log
   }
 
@@ -179,58 +184,6 @@ export class Update extends plugin {
   }
 
   /**
-   * 制作转发消息
-   * @param {string} title 标题 - 首条消息
-   * @param {string} msg 日志信息
-   * @param {string} end 最后一条信息
-   * @returns
-   */
-  async makeForwardMsg (title, msg, end) {
-    let nickname = (this.e.bot ?? Bot).nickname
-    if (this.e.isGroup) {
-      let info = await (this.e.bot ?? Bot).getGroupMemberInfo(this.e.group_id, (this.e.bot ?? Bot).uin)
-      nickname = info.card || info.nickname
-    }
-    let userInfo = {
-      user_id: (this.e.bot ?? Bot).uin,
-      nickname
-    }
-
-    let forwardMsg = [
-      {
-        ...userInfo,
-        message: title
-      },
-      {
-        ...userInfo,
-        message: msg
-      }
-    ]
-
-    if (end) {
-      forwardMsg.push({
-        ...userInfo,
-        message: end
-      })
-    }
-
-    /** 制作转发内容 */
-    if (this.e.isGroup) {
-      forwardMsg = await this.e.group.makeForwardMsg(forwardMsg)
-    } else {
-      forwardMsg = await this.e.friend.makeForwardMsg(forwardMsg)
-    }
-
-    /** 处理描述 */
-    forwardMsg.data = forwardMsg.data
-      .replace(/\n/g, '')
-      .replace(/<title color="#777777" size="26">(.+?)<\/title>/g, '___')
-      .replace(/___+/, `<title color="#777777" size="26">${title}</title>`)
-
-    return forwardMsg
-  }
-
-  /**
    * 处理更新失败的相关函数
    * @param {string} err
    * @param {string} stdout
@@ -257,7 +210,7 @@ export class Update extends plugin {
       await this.reply(
         msg +
         `最新的大脑和现在的憨憨大脑打架啦~：\n${errMsg}\n` +
-        '你肯定是偷偷动了憨憨的大脑！请执行#强制更新，放弃本地修改'
+        '你肯定是偷偷动了憨憨的大脑！请执行#憨憨强制更新，放弃本地修改'
       )
       return
     }
