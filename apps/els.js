@@ -83,7 +83,7 @@ export class RussiaRoundPlatePlugin extends plugin {
       await redis.set(`HANHAN:ELS:${groupId}`, leftBullets + '', { EX: 10 * 60 * 1000 })
       if (leftBullets == 1) {
         await redis.del(`HANHAN:ELS:${groupId}`)
-        await e.reply(`【${username}】开了一枪，只剩1发子弹了\n恭喜${username}是冠军！\n你可以指定一个人用语音发送上一个人指定的骚话，或让他发送【0.5*${this.nop}】元拼手气红包跳过语音惩罚，土豪快来\n本轮游戏结束。请使用#开盘 开启新一轮游戏`)
+        await e.reply(`【${username}】开了一枪，只剩1发子弹了\n恭喜${username}是冠军！\n你可以指定一个人用语音发送上一个人指定的骚话，不然他只能发送【0.5*${this.nop}】元拼手气红包跳过语音惩罚，土豪快来\n本轮游戏结束。请使用#开盘 开启新一轮游戏`)
       }
       else {
         await e.reply(`【${username}】开了一枪，没响。\n还剩【${leftBullets}】发子弹`)
