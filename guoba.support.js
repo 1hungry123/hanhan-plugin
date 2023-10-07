@@ -9,9 +9,9 @@ export function supportGuoba () {
     pluginInfo: {
       name: 'hanhan-plugin',
       title: 'hanhan-Plugin',
-      author: '@hanhan258 @ycxom',
-      authorLink: 'https://github.com/hanhan258',
-      link: 'https://github.com/hanhan258/hanhan-plugin',
+      author: '@1hungry123 @LINKlang',
+      authorLink: 'https://github.com/1hungry123',
+      link: 'https://github.com/1hungry123/hanhan-plugin',
       isV3: true,
       isV2: false,
       description: '基于hanhan娱乐',

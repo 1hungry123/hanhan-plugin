@@ -2,7 +2,6 @@ import plugin from '../../../lib/plugins/plugin.js'
 
 export class RussiaRoundPlatePlugin extends plugin {
   constructor () {
-    this.nop = 0
     super({
       name: '憨憨小游戏-俄罗斯轮盘',
       dsc: '憨憨小游戏-俄罗斯轮盘',
@@ -26,6 +25,7 @@ export class RussiaRoundPlatePlugin extends plugin {
         }
       ]
     })
+    this.nop = 0
   }
 
   async start (e) {
@@ -38,9 +38,9 @@ export class RussiaRoundPlatePlugin extends plugin {
     let groupLock = await redis.get(`HANHAN:ELS:${groupId}`)
     if (!groupLock) {
       let bulletNum = Math.floor(Math.random() * 5) + 5
+      this.nop = 0
       await redis.set(`HANHAN:ELS:${groupId}`, bulletNum + '', { EX: 10 * 60 * 1000 })
       await e.reply(`当前群俄罗斯轮盘已开启！\n弹夹有【${bulletNum}】发子弹。\n请发送#开枪 参与游戏`)
-      this.nop = 0
     } else {
       await e.reply('当前群俄罗斯轮盘正在进行中！\n请发送#开枪 参与游戏')
     }
